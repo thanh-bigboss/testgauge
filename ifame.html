@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en" class="light-style layout-menu-fixed layout-compact" dir="ltr" data-theme="theme-default"
+  data-assets-path="assets/" data-template="vertical-menu-template-free" data-style="light">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
+
+  <title>Dashboard widget</title>
+  <style>
+    .highcharts-figure .chart-container {
+    width: 300px;
+    height: 200px;
+    float: left;
+}
+
+.highcharts-figure,
+.highcharts-data-table table {
+    width: 600px;
+    margin: 0 auto;
+}
+
+.highcharts-data-table table {
+    font-family: Verdana, sans-serif;
+    border-collapse: collapse;
+    border: 1px solid #ebebeb;
+    margin: 10px auto;
+    text-align: center;
+    width: 100%;
+    max-width: 500px;
+}
+
+.highcharts-data-table caption {
+    padding: 1em 0;
+    font-size: 1.2em;
+    color: #555;
+}
+
+.highcharts-data-table th {
+    font-weight: 600;
+    padding: 0.5em;
+}
+
+.highcharts-data-table td,
+.highcharts-data-table th,
+.highcharts-data-table caption {
+    padding: 0.5em;
+}
+
+.highcharts-data-table thead tr,
+.highcharts-data-table tr:nth-child(even) {
+    background: #f8f8f8;
+}
+
+.highcharts-data-table tr:hover {
+    background: #f1f7ff;
+}
+
+@media (max-width: 600px) {
+    .highcharts-figure,
+    .highcharts-data-table table {
+        width: 100%;
+    }
+
+    .highcharts-figure .chart-container {
+        width: 300px;
+        float: none;
+        margin: 0 auto;
+    }
+}
+
+.highcharts-description {
+    margin: 0.3rem 10px;
+}
+
+  </style>
+</head>
+<body>
+    <script src="https://code.highcharts.com/highcharts.js"></script>
+<script src="https://code.highcharts.com/highcharts-more.js"></script>
+<script src="https://code.highcharts.com/modules/solid-gauge.js"></script>
+<script src="https://code.highcharts.com/modules/exporting.js"></script>
+<script src="https://code.highcharts.com/modules/export-data.js"></script>
+<script src="https://code.highcharts.com/modules/accessibility.js"></script>
+<script src="https://www.unpkg.com/@eohjsc/era-widget@1.1.3/src/index.js"></script>
+<figure class="highcharts-figure">
+    <div id="container-speed" class="chart-container"></div>
+    <div id="container-rpm" class="chart-container"></div>
+   
+</figure>
+<input type="checkbox" id="PLC">
+
+
+<script>
+    
+    
+        const eraWidget = new EraWidget();
+        let config = null;
+        let PLC = 0; 
+        eraWidget.onConfiguration((configuration) => {
+            config = configuration.realtime_config[0];
+
+        })
+        eraWidget.onValues((value) => {
+            const input = document.getElementById('PLC');
+            input.checked = value[config.id].value;
+            PLC = value[config.id].value > 0; 
+        })
+        eraWidget.ready();
+        const gaugeOptions = {
+    chart: {
+        type: 'solidgauge'
+    },
+
+    title: null,
+
+    pane: {
+        center: ['50%', '85%'],
+        size: '140%',
+        startAngle: -90,
+        endAngle: 90,
+        background: {
+            backgroundColor:
+                Highcharts.defaultOptions.legend.backgroundColor || '#fafafa',
+            borderRadius: 5,
+            innerRadius: '60%',
+            outerRadius: '100%',
+            shape: 'arc'
+        }
+    },
+
+    exporting: {
+        enabled: false
+    },
+
+    tooltip: {
+        enabled: false
+    },
+
+    // the value axis
+    yAxis: {
+        stops: [
+            [0.1, '#55BF3B'], // green
+            [0.5, '#DDDF0D'], // yellow
+            [0.9, '#DF5353'] // red
+        ],
+        lineWidth: 0,
+        tickWidth: 0,
+        minorTickInterval: null,
+        tickAmount: 2,
+        title: {
+            y: -70
+        },
+        labels: {
+            y: 16
+        }
+    },
+
+    plotOptions: {
+        solidgauge: {
+            borderRadius: 3,
+            dataLabels: {
+                y: 5,
+                borderWidth: 0,
+                useHTML: true
+            }
+        }
+    }
+};
+
+// The speed gauge
+const chartSpeed = Highcharts.chart(
+    'container-speed', Highcharts.merge(gaugeOptions, {
+        yAxis: {
+            min: 0,
+            max: 200,
+            title: {
+                text: 'PLC'
+            }
+        },
+
+        credits: {
+            enabled: false
+        },
+
+        series: [{
+            name: 'PLC',
+            data: [80],
+            dataLabels: {
+                format:
+                '<div style="text-align:center">' +
+                '<span style="font-size:25px">{y}</span><br/>' +
+                '<span style="font-size:12px;opacity:0.4">km/h</span>' +
+                '</div>'
+            },
+            tooltip: {
+                valueSuffix: ' Hz'
+            }
+        }]
+
+    }));
+
+
+
+    
+
+// Bring life to the dials
+setInterval(function () {
+    // Speed
+    let point,
+        PLC,
+        inc;
+
+    if (chartSpeed) {
+        point = chartSpeed.series[0].points[0];
+        inc = Math.round((Math.random() - 0.5) * 100);
+        PLC = point.y + inc;
+
+        if (PLC < 0 || PLC > 200) {
+            PLC = point.y - inc;
+        }
+
+        point.update(PLC);
+    }
+
+
+}, 2000);
+
+    </script>
+</script>
+</body>
+</html>
+
